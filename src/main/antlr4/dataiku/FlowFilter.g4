@@ -5,19 +5,26 @@ parse
  ;
 
 expression:
-    LPAREN expression RPAREN                                 #parenExpression
-    | NOT expression                                         #notExpression
-    | left=expression op=operator? right=expression          #binaryExpression
-    | key=selectorKey value=selectorValue                    #selectorExpression
+    LPAREN expression RPAREN                                                #parenExpression
+    | NOT expression                                                        #notExpression
+    | left=expression op=operator? right=expression                         #binaryExpression
+    | key=(TAG|USER|DOWNSTREAM_FROM) value=selectorTextValue                    #selectorTextExpression
+    | key=(CREATED_FROM|CREATED_TO|CREATED_ON) value=selectorDateValue        #selectorDateExpression
     ;
 text
    : STRING_LITERAL
    ;
-selectorKey:
-    TAG | USER
-    ;
-selectorValue:
+selectorTextValue:
     VALUE | text
+    ;
+selectorDateValue:
+    date|dateTime
+    ;
+date:
+    DATE
+    ;
+dateTime:
+    DATETIME
     ;
 operator:
     AND
@@ -29,7 +36,8 @@ RPAREN : ')';
 AND               : 'AND' ;
 OR                : 'OR' ;
 NOT                : 'NOT' ;
-
+DATE : [0-9][0-9]'/'[0-9][0-9]'/'[0-9][0-9][0-9][0-9];
+DATETIME : DATE ' ' [0-9][0-9]':'[0-9][0-9]':'[0-9][0-9];
 VALUE
    : ~ ('"' | ':' | ' ' | '\t' | '\r'| '\n' | '(' | ')')+
    ;
@@ -47,5 +55,3 @@ WS
 STRING_LITERAL
    : '"' ('\\"' | ~ ('"'))* '"'
    ;
-DIGIT             : [0-9];
-
