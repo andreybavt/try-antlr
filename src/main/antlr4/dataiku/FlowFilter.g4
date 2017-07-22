@@ -4,52 +4,48 @@ parse
  : expression? EOF
  ;
 
-expression
- : expression  operator?  expression
- |  selector=SELECTOR COLON value=string
- ;
+expression:
+    LPAREN expression RPAREN                                 #parenExpression
+    | NOT expression                                         #notExpression
+    | left=expression op=operator? right=expression          #binaryExpression
+    | key=selectorKey value=selectorValue                    #selectorExpression
+    ;
+text
+   : STRING_LITERAL
+   ;
+selectorKey:
+    TAG | USER
+    ;
+selectorValue:
+    VALUE | text
+    ;
+operator:
+    AND
+    | OR
+    ;
 
-// OK
-string:
-    (text* | escapedtext* );
+LPAREN : '(';
+RPAREN : ')';
+AND               : 'AND' ;
+OR                : 'OR' ;
+NOT                : 'NOT' ;
 
-text:
-    CHAR+ | DBL_QUOTE;
+VALUE
+   : ~ ('"' | ':' | ' ' | '\t' | '\r'| '\n' | '(' | ')')+
+   ;
 
+TAG               : 'tag:' ;
+USER              : 'user:' ;
+CREATED_ON        : 'createdOn:' ;
+CREATED_FROM      : 'createdFrom:' ;
+CREATED_TO        : 'createdTo:' ;
+DOWNSTREAM_FROM   : 'downstreamFrom:' ;
 
-//todo "tag"
-escapedtext
- : DBL_QUOTE value=anychar* DBL_QUOTE
- ;
-
-anychar:
-   CHAR | escape_chars | ANY_CHAR_IN_ESCAPE | COLON;
-
-escape_chars:
-    ESC_DBL_QUOTE;
-
-operator
- : AND | OR
- ;
-
-SELECTOR            : TAG | USER;
-TAG               : 'tag' ;
-DBL_QUOTE : '"';
-COLON:':';
-AND : 'AND';
-OR : 'OR';
-LPAREN            : '(' ;
-RPAREN            : ')' ;
-
-USER              : 'user' ;
-CREATED_ON        : 'createdOn' ;
-CREATED_FROM      : 'createdFrom' ;
-CREATED_TO        : 'createdTo' ;
-DOWNSTREAM_FROM   : 'downstreamFrom' ;
+WS
+   : [ \t\r\n] -> skip
+   ;
+STRING_LITERAL
+   : '"' ('\\"' | ~ ('"'))* '"'
+   ;
 DIGIT             : [0-9];
-ESC_DBL_QUOTE        : '\\"';
-CHAR                : ~[ :];
-
-ANY_CHAR_IN_ESCAPE    : ~["] ;
-WS : [ \t\r\n]+ -> skip ;
 
